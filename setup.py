@@ -12,17 +12,19 @@ def read(rel_path):
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
+
 setup(
-    name='T265',
-    version='0.1',
-    description='T265 Tracking camera API wrapper',
+    name='t265',
+    version='0.1.1',
+    description='t265 Tracking camera API wrapper',
     author='Yusuke Tanaka',
     license='LGPLv3',
-    packages=find_packages(include=['T265', 'T265.*']),
+    project_urls={'GitHub':'https://github.com/Suke0811/Localization_T265'},
+    packages=find_packages(include=['t265', 't265.*']),
     install_requires=requirements,
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Framework :: Robot Framework'
+        'Framework :: Robot Framework',
         'Intended Audience :: Developers',
         'Intended Audience :: Education',
         'Intended Audience :: Science/Research',
