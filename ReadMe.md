@@ -5,6 +5,10 @@ This is very minimalistic. The point is to provide the simplest possible way of 
 ## Ver 0.1.xx
 You can specify a camera by its serial number. If you want to use more than one T265, you can create multiple instances of Tracking().
 
+## Important Note
+Starting [Ver. 1.54.1](https://github.com/IntelRealSense/librealsense/releases/tag/v2.54.1) Intel has dropped supports for T265 entirely. 
+Hence, this library requires pyrealsense2 earlier than Ver. 2.53.1 
+Starting Ver 0.1.3 this is part of requirements.txt.
 
 ## Installation
 this library is pip installable

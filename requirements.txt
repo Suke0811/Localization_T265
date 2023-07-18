@@ -1,2 +1,2 @@
-pyrealsense2
+pyrealsense2<=2.53.1
 numpy

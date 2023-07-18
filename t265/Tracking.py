@@ -1,19 +1,23 @@
 import pyrealsense2 as rs
 import numpy as np
 
-T265SN = '133122110783'
 
 class Tracking:
-    def __init__(self):
-        self.pipe = rs.pipeline()
-        self.config_camera()
+    def __init__(self, camera_sn=None):
         self.pose = None
         self.camera_on = False
-        self.TIMEOUT = 100
+        self.camera_sn = camera_sn
 
-    def config_camera(self, tracking_camera=T265SN):
+        self.TIMEOUT = 100
+        self.pipe = rs.pipeline()
+        self.config_camera()
+
+    def config_camera(self):
         self.config = rs.config()
-        self.config.enable_device(tracking_camera)
+        if self.camera_sn is None:
+            self.config.enable_stream(rs.stream.pose)
+        else:
+            self.config.enable_device(self.camera_sn)
 
     def start_tracking(self):
         self.pipe.start(self.config)
