@@ -23,12 +23,12 @@ Here is a sample code
 import time
 from t265 import Tracking
 
-my_tracking = Tracking(camera_SN='133122110783') # Provide your camera serial number. It should be on the camera bottom
+my_tracking = Tracking(camera_sn='133122110783') # Provide your camera serial number. It should be on the camera bottom
 
 N = 10     # will show pose, vel, acc for 10 times
 for _ in range(N):
     my_tracking.update_pose(wait=True) # wait=True will block the code till you get data from camera.     
-    print(f'Current pose: {my_tracking.get_pose()}')    # getting pose (x,y,z, quat_xyzw) 1 by 7 np.array
+    print(f'Current pose: {my_tracking.get_translation()}')    # getting pose (x,y,z, quat_xyzw) 1 by 7 np.array
     print(f'Current velocity: {my_tracking.get_velocity()}')    # getting velocity (linear vel x, y, z, angular vel x, y, z)
     print(f'Current acceleration: {my_tracking.get_acceleration()()}')  # getting velocity (linear acc x, y, z, angular acc x, y, z)
     
