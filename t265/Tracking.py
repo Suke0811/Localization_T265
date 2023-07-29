@@ -23,6 +23,7 @@ class Tracking:
         self.pipe = rs.pipeline()
         self.config_camera()
         self.connection_retry = connection_retry
+        self.init_T = np.eye(4)
 
     def config_camera(self):
         self.config = rs.config()
@@ -38,6 +39,9 @@ class Tracking:
                 frames = self.pipe.wait_for_frames(self.TIMEOUT)
                 if frames.get_pose_frame() is not None:
                     self.camera_on = True
+                    self.update_pose(wait=True)
+                    self.init_T = self.get_matrix()
+
                     break
             except RuntimeError:
                 pass
@@ -108,10 +112,24 @@ class Tracking:
 
             if frame == 'ros':
                 rot = R.from_euler('xyz', [0, 90, 90], degrees=True).as_matrix()
-                T_origin2ros = np.eye(4)
-                T_origin2ros[0:3, 0:3] = rot
+                c_T_ros = np.eye(4)
+                c_T_ros[0:3, 0:3] = rot
 
-                T = np.linalg.inv(T_origin2ros) @ T
+                # E_T_ck = np.eye(4, dtype=np.float32)
+                # E_T_ck[0:3, 0:3] = np.array(E_R_ck)
+                # E_T_ck[0:3, 3] = np.array(self.current_pos)
+                # # c0_T_ck = c0_T_E * E_T_ck
+                # c0_T_ck = np.dot(self.c0_T_E, E_T_ck)
+                # # b0_T_ck = b0_T_c0 * c0_T_ck
+                # b0_T_ck = np.dot(self.b_T_c, c0_T_ck)
+                # b0_T_bk = np.dot(b0_T_ck, self.c_T_b)
+                E_T_ck = T
+                c0_T_E = self.init_T.transpose()
+                c0_T_ck = c0_T_E @ E_T_ck
+                ros_T_c = c_T_ros.transpose()
+                ros0_T_ck = ros_T_c @ c0_T_ck
+                ros0_T_rosk = ros0_T_ck @ c_T_ros
+                T = ros0_T_rosk
             return T
 
 
@@ -131,8 +149,11 @@ if __name__ == "__main__":
     track = Tracking()
     while True:
         track.update_pose(wait=True)
-        print("Position: {}".format(track.get_translation('ros')))
-        print(track.get_matrix('ros'))
+        pos = track.get_translation('ros')
+        print(f'pos: {pos[0:3]}')
+        rot = R.from_quat(pos[3:]).as_euler('zyx', degrees=True)
+        print(f'rot: {rot}')
+        #print(track.get_matrix('ros'))
         time.sleep(1)
         #print("Velocity: {}".format(track.get_velocity()))
         #print("Acceleration: {}\n".format(track.get_acceleration()))
