@@ -70,8 +70,17 @@ class Tracking:
         except KeyboardInterrupt:
             self.stop_tracking()
 
+    def get_translation(self, frame=None):
+        if frame is None:
+            return self._get_translation()
+        else:
+            T = self.get_matrix(frame)
+            if T is not None:
+                trans = T[0:3,3].flatten()
+                quat = R.from_matrix(T[0:3, 0:3]).as_quat()
+                return np.append(trans, quat)
 
-    def get_translation(self):
+    def _get_translation(self):
         if self.pose:
             trans = self._vector2np(self.pose.get_pose_data().translation)
             quat = self._quat2np(self.pose.get_pose_data().rotation)
@@ -91,7 +100,7 @@ class Tracking:
 
     def get_matrix(self, frame=None):
         if self.pose:
-            trans = self.get_translation()
+            trans = self._get_translation()
             rot_mat = R.from_quat(trans[3:]).as_matrix()
             T = np.eye(4)
             T[0:3,0:3] = rot_mat
@@ -122,7 +131,7 @@ if __name__ == "__main__":
     track = Tracking()
     while True:
         track.update_pose(wait=True)
-        print("Position: {}".format(track.get_translation()))
+        print("Position: {}".format(track.get_translation('ros')))
         print(track.get_matrix('ros'))
         time.sleep(1)
         #print("Velocity: {}".format(track.get_velocity()))
