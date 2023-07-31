@@ -13,7 +13,7 @@ class Tracking:
     def __init__(self, camera_sn=None, connection_retry=DEFAULT_CONNECTION_RETRY, retry_time=DEFAULT_RETRY_TIME,
                  timeout=DEFAULT_TIMEOUT):
         """
-        Setting up the camera.
+        Setting up the tracing camera. If you want to use multiple cameras, create multiple Tracking object instances.
 
         Args:
             camera_sn (str): Camera serial number. None for the first camera that is connected.
@@ -35,7 +35,10 @@ class Tracking:
     def start_tracking(self):
         """
         Start tracking with the camera. It will retry for self.connection_retry times.
-        Tips: This will be called automatically when you call update_pose() for the first time.
+        If you like to start tracking with a specific camera, set the camera_sn in the constructor.
+
+        Tips:
+            This will be called automatically when you call update_pose() for the first time.
         """
         self.pipe.start(self.config)
         for i in range(self.connection_retry):
@@ -71,9 +74,10 @@ class Tracking:
 
     def stop_tracking(self):
         """
-        Stop tracking with the camera.
+        Stop tracking with the camera. Safe closure.
 
-        Note: This will be called automatically when Python exits.
+        Note:
+            This will be called automatically when Python exits.
         """
         if self.camera_on:
             self.pipe.stop()
@@ -81,10 +85,12 @@ class Tracking:
 
     def update_pose(self, wait=True):
         """
-        Update the pose.
+        Receive camera pose tracking information from the camera. you need to call this function to get the latest pose.
+        Then you can call get_translation(), get_velocity(), get_acceleration(), get_matrix() to get the pose, velocity, acceleration, and transformation matrix.
+
 
         Args:
-            wait (bool): If True, waits for the next frame.
+            wait (bool): If True, waits for the next frame. Blocking call. Timeouts after self.TIMEOUT milliseconds.
 
         Returns:
             None
