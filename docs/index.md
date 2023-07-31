@@ -9,8 +9,6 @@ this library is pip installable
 pip install t265
 ```
 
-
-
 ## Ver 0.1.xx
 This library handles the frame transformation difference between the pyrealsense2 and ROS. 
 You can specify a camera by its serial number. If you want to use more than one T265, you can create multiple instances of Tracking().
