@@ -1,0 +1,124 @@
+site_name: T265 Tracking Camera
+theme:
+#  favicon: images/lemur_logo.svg
+#  logo: images/lemur_logo.svg
+  icon:
+    repo: fontawesome/brands/github
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - navigation.footer
+    - navigation.instant
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+    - header.autohide
+    - announce.dismiss
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+        primary: teal
+        accent: blue
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      options:
+        custom_icons:
+          - overrides/.icons
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      url_request_headers: ''
+      url_download: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - admonition
+  - pymdownx.details
+  - pymdownx.tasklist:
+      clickable_checkbox: true
+      custom_checkbox: true
+  - pymdownx.tabbed
+
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Suke0811/Localization_T265
+
+  generator: true
+
+copyright: Copyright &copy; 2022 - 2023 UCLA Lemur
+repo_url: https://github.com/Suke0811/Localization_T265
+repo_name: Suke0811/Localization_T265
+
+plugins:
+  - search
+  - git-revision-date-localized
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: false
+            members_order: source
+
+#  - git-authors
+#  - table-reader
+#  - mkdocs-jupyter
+#  - glightbox
+#  - macros:
+#      include_yaml:
+#        - docs/macros/glob_macros.yaml
+#      module_name: docs/macros/codes
+
+extra_javascript:
+#  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+#  - javascripts/tablesort.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+
+nav:
+  - Home:
+      - index.md
+      - about_us.md
