@@ -119,6 +119,5 @@ extra_javascript:
 
 
 nav:
-  - Home:
-      - index.md
-      - about_us.md
+    - index.md
+    - tracking.md

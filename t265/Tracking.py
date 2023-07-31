@@ -35,6 +35,7 @@ class Tracking:
     def start_tracking(self):
         """
         Start tracking with the camera. It will retry for self.connection_retry times.
+        Tips: This will be called automatically when you call update_pose() for the first time.
         """
         self.pipe.start(self.config)
         for i in range(self.connection_retry):
@@ -71,6 +72,8 @@ class Tracking:
     def stop_tracking(self):
         """
         Stop tracking with the camera.
+
+        Note: This will be called automatically when Python exits.
         """
         if self.camera_on:
             self.pipe.stop()
@@ -108,7 +111,7 @@ class Tracking:
             trans (bool): If True, returns the translation.
             rotation (str): Rotation format. 'quat', or Euler 'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx', 'ZYX', 'ZXY',
                             'YXZ', 'YZX', 'XZY', 'XYZ'.
-            degrees (bool): If True, the Euler angles are returned in degrees.
+            degrees (bool): If True, the Euler angles are returned in degrees. ignored if rotation is 'quat'.
 
         Returns:
             np.array: [x, y, z, qx, qy, qz, qw] or [x, y, z, rx, ry, rz] for 'xyz' format. Follows the input Euler
@@ -122,7 +125,7 @@ class Tracking:
             if T is not None:
                 t = T[0:3, 3].flatten()
                 q = R.from_matrix(T[0:3, 0:3]).as_quat()
-                ret = self.to_nparray(t, q, trans, rotation, degrees)
+                ret = self._to_nparray(t, q, trans, rotation, degrees)
         return ret
 
     def _to_single_nparray(self, list_array):
@@ -145,9 +148,9 @@ class Tracking:
         if self.pose:
             t = self._vector2np(self.pose.get_pose_data().translation)
             q = self._quat2np(self.pose.get_pose_data().rotation)
-            return self.to_nparray(t, q, trans, rotation, degrees)
+            return self._to_nparray(t, q, trans, rotation, degrees)
 
-    def to_nparray(self, t, q, trans, rotation, degrees):
+    def _to_nparray(self, t, q, trans, rotation, degrees):
         """
         Convert translation and rotation to np.array.
 
@@ -279,9 +282,21 @@ class Tracking:
 
     # Status functions
     def is_camera_on(self):
+        """
+        Check if the camera is on.
+
+        Returns:
+            bool: True if the camera is on.
+        """
         return self.camera_on
 
     def get_camera_sn(self):
+        """
+        Get the camera serial number.
+
+        Returns:
+            str: Camera serial number.
+        """
         self.camera_sn = self.pipe.get_active_profile().get_device().get_info(rs.camera_info.serial_number)
         return self.camera_sn
 
