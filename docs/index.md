@@ -9,10 +9,20 @@ this library is pip installable
 pip install t265
 ```
 
-## Ver 0.1.xx
+## Ver. 0.1.xx
 This library handles the frame transformation difference between the pyrealsense2 and ROS. 
 You can specify a camera by its serial number. If you want to use more than one T265, you can create multiple instances of Tracking().
 
+## Starting Ver. 0.1.8
+Now you can add any arbitrary frame transformation to the camera pose. This is useful when you want to add a transformation from the camera to the robot base.
+This is not trivial since the returned pose is the current camera frame with respect to the initial camera frame. 
+This means if you want to get the robot base pose with respect to the initial body frame, you need to add the transformation from the robot base to the camera frame.
+
+This is now handled by the library. 
+
+!!! note
+
+    This is only for the pose and velocity. Acceleration is not supported yet.
 
 
 ## Important Note
@@ -76,7 +86,20 @@ Currently, the library supports 2 frames: t265 hardware and ros (camera/odom/sam
 
 !!! note
 
-    Currently only translation is supported. Velocity and acceleration are not supported yet.
+    Currently translation and velocity are supported. Acceleration is not supported yet.
 
 
 
+## Adding your Custom Frame
+You can add your custom frame to the camera pose. This is useful when you want to add a transformation from the camera to the robot base.
+You must add a frame before starting the camera since the frame needs to be initialized. 
+```python
+from t265 import Tracking
+my_tracking = Tracking() 
+my_tracking.add_custom_frames('my_frame', trans=None, rot=[90, 0, 90], rot_format='xyz', degrees=True, T=None)
+my_tracking.start_tracking()
+```
+
+!!! note
+
+        For more information, please check the [Tracking APIs: add_custom_frame](./tracking.md/#t265.Tracking.Tracking.add_custom_frames).

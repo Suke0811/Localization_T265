@@ -110,6 +110,31 @@ class FrameHandler:
 
         return ret
 
+    def convert(self, current_camera_frame, T_mat=True, angular=None, linear=None):
+        """
+        Apply the frame transformation to the given frame, resulting in a transformed frame and, optionally, angular and linear velocities.
+
+        Args:
+            current_camera_frame (np.array): 4x4 transformation matrix of the current camera frame.
+            T_mat (bool, optional): If True, the resulting transformed frame matrix is included in the return tuple. Defaults to True.
+            angular (bool, optional): If True, the transformed angular velocity is included in the return tuple. Defaults to True.
+            linear (bool, optional): If True, the transformed linear velocity is included in the return tuple. Defaults to True.
+
+        Returns:
+            tuple: A tuple containing the transformed frame, angular velocity, and linear velocity as requested.
+                   The order of the returned items is as follows: transformed frame, angular velocity, linear velocity.
+        """
+        T = self.transform(current_camera_frame, return_all_frames=False)
+        if angular is not None and linear is not None:
+            vel = self.transform_velocity(current_camera_frame, angular, linear)
+
+        if T_mat and angular is not None and linear is not None:
+            return T, vel
+        elif angular is not None and linear is not None:
+            return vel
+        else:
+            return T
+
     def transform(self, current_camera_frame, return_all_frames=False):
         """
         Apply the frame transformation to the given frame, resulting in a transformed frame.
@@ -180,9 +205,9 @@ class FrameHandler:
 
         # Transform the angular velocity from the current camera frame to the target frame (ros0_w_ros)
         ros0_w_ros = (ros0_R_rosk @ ck_w_ck).reshape(3, )
-    
+
         # Transform the linear velocity from the current camera frame to the target frame (ros0_v_ros)
         ros0_v_ros = (ros0_R_rosk @ ck_v_ck + np.cross(ck_w_ck, c_p_ros)).reshape(3, )
 
         # Return the transformed velocity vector, combining the transformed angular and linear velocities
-        return np.append(ros0_w_ros, ros0_v_ros)
+        return np.append(ros0_v_ros, ros0_w_ros)

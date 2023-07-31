@@ -2,11 +2,17 @@ import logging, time
 import numpy as np
 import pyrealsense2 as rs
 from scipy.spatial.transform import Rotation as R
-
+from .FrameHandler import FrameHandler
 # Default values
 DEFAULT_CONNECTION_RETRY = 5
 DEFAULT_RETRY_TIME = 500
 DEFAULT_TIMEOUT = 100
+
+DEFAULT_FRAMES = \
+    {'ros':
+         dict(trans=None, rot=[0, 90, 90], rot_format='xyz', degrees=True, T=None),
+    }
+
 
 
 class Tracking:
@@ -31,6 +37,31 @@ class Tracking:
         self._config_camera()
         self.connection_retry = connection_retry
         self.init_T = np.eye(4)
+        self.default_frames = DEFAULT_FRAMES
+        self.frames = dict()
+
+    def add_custom_frames(self, name, trans=None, rot=None, rot_format='quat', degrees=False, T=None):
+        """
+        Define the transformation matrix for your custom frame. You can define as many frames as you want.
+        This is always from the camera frame to the custom frame.
+
+        Args:
+            trans (np.array, optional): The translation vector [x, y, z]. Defaults to zero vector if not provided.
+            rot (np.array, optional): The rotation, represented as either a quaternion or Euler angles. Defaults to identity matrix if not provided.
+            rot_format (str, optional): The format of the rotation (e.g., 'quat', 'matrix', 'xyz'). Defaults to 'quat'.
+            degrees (bool, optional): Indicates whether the rotation angles are in degrees. Defaults to False (i.e., angles are in radians).
+            T (np.array, optional): A precomputed 4x4 transformation matrix. If provided, 'trans' and 'rot' will be ignored. Defaults to None.
+
+        Examples:
+            >>> # Define a custom frame named 'my_frame with a 90 degree rotation around the x-axis and z-axis
+            >>> my_tracking.add_custom_frames('my_frame', rot=[90, 0, 90], rot_format='xyz', degrees=True)
+
+        Notes:
+            Your origin frame should be the camera frame. The transformation matrix is the custom frame with respect to the camera.
+        """
+        if self.camera_on:
+            raise RuntimeError('Cannot add custom frames after the camera is started')
+        self.frames[name] = FrameHandler(name).set_frame_transformation(trans, rot, rot_format, degrees, T)
 
     def start_tracking(self):
         """
@@ -48,6 +79,8 @@ class Tracking:
                     self.camera_on = True
                     self.update_pose(wait=True)
                     self.init_T = self.get_matrix()
+                    self._set_defualt_frames() # set the default frames
+                    self._init_frames()  # initialize all the frames associated
                     self.get_camera_sn()
                     break
             except RuntimeError:
@@ -179,7 +212,7 @@ class Tracking:
             ret_list.append(self._quat2other(q, format=rotation, degrees=degrees))
         return self._to_single_nparray(ret_list)
 
-    def get_velocity(self):
+    def get_velocity(self, frame=None):
         """
         Get the velocity of the camera.
 
@@ -189,9 +222,15 @@ class Tracking:
         if self.pose:
             vel = self._vector2np(self.pose.get_pose_data().velocity)
             ang_vel = self._vector2np(self.pose.get_pose_data().angular_velocity)
-            return np.append(vel, ang_vel)
+            if frame is not None:
+                T = self.get_matrix()
+                all_vel = self._convert_frame(frame, T, T_mat=False, angular=ang_vel, linear=vel)
+            else:
+                all_vel = np.append(vel, ang_vel)
 
-    def get_acceleration(self):
+            return all_vel
+
+    def get_acceleration(self, frame=None):
         """
         Get the acceleration of the camera.
 
@@ -201,6 +240,9 @@ class Tracking:
         if self.pose:
             acc = self._vector2np(self.pose.get_pose_data().acceleration)
             ang_acc = self._vector2np(self.pose.get_pose_data().angular_acceleration)
+
+            if frame is not None:
+                raise NotImplementedError('Acceleration conversion is not implemented yet')
             return np.append(acc, ang_acc)
 
     def get_matrix(self, frame=None):
@@ -221,18 +263,21 @@ class Tracking:
             T[0:3, 0:3] = rot_mat
             T[0:3, 3] = trans[0:3]
 
-            if frame == 'ros':
-                rot = R.from_euler('xyz', [0, 90, 90], degrees=True).as_matrix()
-                c_T_ros = np.eye(4)
-                c_T_ros[0:3, 0:3] = rot
+            if frame is not None:
+                T = self._convert_frame(frame, T, T_mat=True, angular=None, linear=None)
 
-                E_T_ck = T
-                c0_T_E = self.init_T.transpose()
-                c0_T_ck = c0_T_E @ E_T_ck
-                ros_T_c = c_T_ros.transpose()
-                ros0_T_ck = ros_T_c @ c0_T_ck
-                ros0_T_rosk = ros0_T_ck @ c_T_ros
-                T = ros0_T_rosk
+            # if frame == 'ros':
+            #     rot = R.from_euler('xyz', [0, 90, 90], degrees=True).as_matrix()
+            #     c_T_ros = np.eye(4)
+            #     c_T_ros[0:3, 0:3] = rot
+            #
+            #     E_T_ck = T
+            #     c0_T_E = self.init_T.transpose()
+            #     c0_T_ck = c0_T_E @ E_T_ck
+            #     ros_T_c = c_T_ros.transpose()
+            #     ros0_T_ck = ros_T_c @ c0_T_ck
+            #     ros0_T_rosk = ros0_T_ck @ c_T_ros
+            #     T = ros0_T_rosk
             return T
 
     def _quat2other(self, quat, order: str = 'xyzw', format='matrix', degrees=False):
@@ -285,6 +330,39 @@ class Tracking:
             return np.array([quat.w, quat.x, quat.y, quat.z])
         else:
             return np.array([quat.x, quat.y, quat.z, quat.w])
+
+    def _set_defualt_frames(self):
+        """
+        Set the default frames.
+        """
+        for name, frame in self.default_frames.items():
+            f = FrameHandler(name)
+            f.set_frame_transformation(**frame)
+            self.frames[name] = f
+
+    def _init_frames(self):
+        """
+        Initialize the frames.
+        """
+        T = self.get_matrix()
+        for name, frame in self.frames.items():
+            frame.set_init_frame(T=T)
+
+    def _convert_frame(self, name, T, T_mat=True, angular=None, linear=None):
+        """
+        Convert the frame to the given frame.
+
+        Args:
+            name (str): The name of the frame to convert to.
+            T (np.array): The transformation matrix.
+
+        Returns:
+            FrameHandler: The converted frame.
+        """
+        frame = self.frames.get(name)
+        if frame is None:
+            raise ValueError(f'Frame {frame} does not exist')
+        return frame.convert(current_camera_frame=T, T_mat=T_mat, angular=angular, linear=linear)
 
     # Status functions
     def is_camera_on(self):

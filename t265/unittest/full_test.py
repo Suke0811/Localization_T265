@@ -14,7 +14,7 @@ if __name__ == "__main__":
         print(f'pos: {pos[0:3]}')
         print(f"T: {track.get_matrix('ros')}")
         print(f"euler {track.get_translation('ros', trans=False, rotation='zyx', degrees=True)}")
-        print("Velocity: {}".format(track.get_velocity()))
+        print("Velocity: {}".format(track.get_velocity('ros')))
         print("Acceleration: {}\n".format(track.get_acceleration()))
         time.sleep(1)
 

@@ -120,4 +120,6 @@ extra_javascript:
 
 nav:
     - index.md
-    - tracking.md
+    - APIs:
+      - tracking.md
+      - frame_handler.md
