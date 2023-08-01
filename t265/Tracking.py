@@ -48,13 +48,18 @@ class Tracking:
         Args:
             trans (np.array, optional): The translation vector [x, y, z]. Defaults to zero vector if not provided.
             rot (np.array, optional): The rotation, represented as either a quaternion or Euler angles. Defaults to identity matrix if not provided.
-            rot_format (str, optional): The format of the rotation (e.g., 'quat', 'matrix', 'xyz'). Defaults to 'quat'.
+            rot_format (str, optional): The format of the rotation (e.g., 'quat', 'matrix', 'xyz'). Defaults to 'quat'. Avaialble formats are 'quat', 'xyzw' (same as 'quat'), 'wxyz' (quat matlab format), 'matrix', 'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx', 'ZYX', 'ZXY', 'YXZ', 'YZX', 'XZY', 'XYZ'.
             degrees (bool, optional): Indicates whether the rotation angles are in degrees. Defaults to False (i.e., angles are in radians).
             T (np.array, optional): A precomputed 4x4 transformation matrix. If provided, 'trans' and 'rot' will be ignored. Defaults to None.
 
         Examples:
             >>> # Define a custom frame named 'my_frame with a 90 degree rotation around the x-axis and z-axis
             >>> my_tracking.add_custom_frames('my_frame', rot=[90, 0, 90], rot_format='xyz', degrees=True)
+            >>> # Define a custom frame named 'my_another_frame with an identity matrix
+            >>> my_tracking.add_custom_frames('my_another_frame', T=np.eye(4))
+            >>> # here is how to get the transformation matrix of the custom frame
+            >>> my_tracking.get_matrix('my_frame')
+            >>> my_tracking.get_matrix('my_another_frame')
 
         Notes:
             Your origin frame should be the camera frame. The transformation matrix is the custom frame with respect to the camera.
