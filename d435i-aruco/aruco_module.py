@@ -7,8 +7,8 @@ class ArucoDetector:
     def __init__(self):
         self.pipeline = rs.pipeline()
         self.config = rs.config()
-        self.config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)
-        self.config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)
+        self.config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
+        self.config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
         
         # Align the two cameras since there is physical offset
         self.align_to = rs.stream.color
@@ -80,9 +80,15 @@ class ArucoDetector:
                 self.marker_positions[ids[i][0]] = [x_cm, y_cm, z_cm]
 
                 # Display the 3D coordinates next to the marker
-                coord_text = f"ID {ids[i][0]}: X={x_cm:.2f}, Y={y_cm:.2f}, Z={z_cm:.2f}"
-                cv2.putText(color_image, coord_text, (x_pixel + 20, y_pixel + 20), 
-                            cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)
+                # display x, y, z in different lines
+                coord_text = (f"ID {ids[i][0]}:\n"
+                              f"X={x_cm:.2f}cm\n"
+                              f"Y={y_cm:.2f}cm\n"
+                              f"Z={z_cm:.2f}cm")
+                for j, line in enumerate(coord_text.split('\n')):
+                    y_offset = y_pixel + 20 + (15 * j)
+                    cv2.putText(color_image, line, (x_pixel + 20, y_offset), 
+                                cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)
         return color_image
 
     def get_marker_position(self, marker_id):
