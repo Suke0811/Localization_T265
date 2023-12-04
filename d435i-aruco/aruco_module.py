@@ -71,12 +71,15 @@ class ArucoDetector:
                 # Adjust y-coordinate so that up is positive y
                 x, y, z = point_3d
                 y = -y  
-
+                
+                # Convert from meters to centimeters
+                x_cm, y_cm, z_cm = x * 100, y * 100, z * 100
+                
                 # Update the dictionary with the latest position data
-                self.marker_positions[ids[i][0]] = [x, y, z]
+                self.marker_positions[ids[i][0]] = [x_cm, y_cm, z_cm]
 
                 # Display the 3D coordinates next to the marker
-                coord_text = f"ID {ids[i][0]}: X={x:.2f}, Y={y:.2f}, Z={z:.2f}"
+                coord_text = f"ID {ids[i][0]}: X={x_cm:.2f}, Y={y_cm:.2f}, Z={z_cm:.2f}"
                 cv2.putText(color_image, coord_text, (x_pixel + 20, y_pixel + 20), 
                             cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)
         return color_image
