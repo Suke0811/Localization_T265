@@ -73,6 +73,7 @@ class ArucoDetector:
                 y = -y  
                 
                 # Convert from meters to centimeters
+                # consistently 6mm too much?
                 x_cm, y_cm, z_cm = x * 100, y * 100, z * 100
                 
                 # Update the dictionary with the latest position data
