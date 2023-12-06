@@ -48,6 +48,41 @@ class ArucoDetector:
 
         return aligned_depth_frame, color_image
     
+    # ### helper functions for update_marker_positions ### #
+    #  calculates x, y, z position
+    def calculate_cm (self, x_pixel, y_pixel, depth_frame):
+        # Get depth value
+        depth = depth_frame.get_distance(x_pixel, y_pixel)
+
+        # Deproject pixels to 3D space
+        point_3D = rs.rs2_deproject_pixel_to_point(self.intrinsics, [x_pixel, y_pixel], depth)      
+        
+        # Adjust y-coordinate so that up is positive y
+        x, y, z = point_3D
+        y = -y  
+                
+        # Convert from meters to centimeters
+        # consistently 6mm too much?
+        x_cm, y_cm, z_cm = x * 100, y * 100, z * 100
+        
+        return x_cm, y_cm, z_cm 
+    
+    # Display the 3D coordinates next to the marker
+    # display x, y, z in different lines
+    def display (self, color_image, x_pixel, y_pixel, id):
+        
+        coord_text = (f"ID {ids[id][0]}:\n"
+                        f"X={x_cm:.2f}cm\n"
+                        f"Y={y_cm:.2f}cm\n"
+                        f"Z={z_cm:.2f}cm")
+        for j, line in enumerate(coord_text.split('\n')):
+            y_offset = y_pixel + 20 + (15 * j)
+            cv2.putText(color_image, line, (x_pixel + 20, y_offset), 
+                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)        
+            
+            
+    # ######################################################## # 
+    
     def update_marker_positions(self, color_image, depth_frame):
         # Detect ArUco markers
         gray = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
@@ -62,19 +97,8 @@ class ArucoDetector:
                 center = np.mean(corners[i][0], axis=0)
                 x_pixel, y_pixel = int(center[0]), int(center[1])
 
-                # Get depth value
-                depth = depth_frame.get_distance(x_pixel, y_pixel)
-
-                # Deproject pixels to 3D space
-                point_3d = rs.rs2_deproject_pixel_to_point(self.intrinsics, [x_pixel, y_pixel], depth)
-                
-                # Adjust y-coordinate so that up is positive y
-                x, y, z = point_3d
-                y = -y  
-                
-                # Convert from meters to centimeters
-                # consistently 6mm too much?
-                x_cm, y_cm, z_cm = x * 100, y * 100, z * 100
+                # calulcate position in 3D space in cm
+                x_cm, y_cm, z_cm = self.calculate_cm(x_pixel, y_pixel, depth_frame)
                 
                 # Update the dictionary with the latest position data
                 self.marker_positions[ids[i][0]] = [x_cm, y_cm, z_cm]
