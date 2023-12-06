@@ -48,7 +48,7 @@ class ArucoDetector:
 
         return aligned_depth_frame, color_image
     
-    # ### helper functions for update_marker_positions ### #
+# ### helper functions for update_marker_positions ### #
     #  calculates x, y, z position
     def calculate_cm (self, x_pixel, y_pixel, depth_frame):
         # Get depth value
@@ -63,25 +63,27 @@ class ArucoDetector:
                 
         # Convert from meters to centimeters
         # consistently 6mm too much?
-        x_cm, y_cm, z_cm = x * 100, y * 100, z * 100
+        x_cm, y_cm, z_cm = x * 100, y * 100, z * 100 
         
         return x_cm, y_cm, z_cm 
     
     # Display the 3D coordinates next to the marker
     # display x, y, z in different lines
-    def display (self, color_image, x_pixel, y_pixel, id):
+    def display(self, color_image, x_pixel, y_pixel, marker_id):
+        # Get the position data from the dictionary
+        x_cm, y_cm, z_cm = self.marker_positions[marker_id]
         
-        coord_text = (f"ID {ids[id][0]}:\n"
-                        f"X={x_cm:.2f}cm\n"
-                        f"Y={y_cm:.2f}cm\n"
-                        f"Z={z_cm:.2f}cm")
+        coord_text = (f"ID {marker_id}:\n"
+                      f"X={x_cm:.2f}cm\n"
+                      f"Y={y_cm:.2f}cm\n"
+                      f"Z={z_cm:.2f}cm")
         for j, line in enumerate(coord_text.split('\n')):
             y_offset = y_pixel + 20 + (15 * j)
             cv2.putText(color_image, line, (x_pixel + 20, y_offset), 
-                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)        
+                        cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)    
             
             
-    # ######################################################## # 
+# ######################################################## # 
     
     def update_marker_positions(self, color_image, depth_frame):
         # Detect ArUco markers
@@ -101,18 +103,11 @@ class ArucoDetector:
                 x_cm, y_cm, z_cm = self.calculate_cm(x_pixel, y_pixel, depth_frame)
                 
                 # Update the dictionary with the latest position data
-                self.marker_positions[ids[i][0]] = [x_cm, y_cm, z_cm]
+                marker_id = ids[i][0]
+                self.marker_positions[marker_id] = [x_cm, y_cm, z_cm]
 
-                # Display the 3D coordinates next to the marker
-                # display x, y, z in different lines
-                coord_text = (f"ID {ids[i][0]}:\n"
-                              f"X={x_cm:.2f}cm\n"
-                              f"Y={y_cm:.2f}cm\n"
-                              f"Z={z_cm:.2f}cm")
-                for j, line in enumerate(coord_text.split('\n')):
-                    y_offset = y_pixel + 20 + (15 * j)
-                    cv2.putText(color_image, line, (x_pixel + 20, y_offset), 
-                                cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)
+                self.display(color_image, x_pixel, y_pixel, marker_id)
+                
         return color_image
 
     def get_marker_position(self, marker_id):
