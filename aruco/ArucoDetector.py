@@ -50,7 +50,7 @@ class ArucoDetector:
     
 # ### helper functions for update_marker_positions ### #
     #  calculates x, y, z position
-    def calculate_cm (self, x_pixel, y_pixel, depth_frame):
+    def calculate_m (self, x_pixel, y_pixel, depth_frame):
         # Get depth value
         depth = depth_frame.get_distance(x_pixel, y_pixel)
 
@@ -63,20 +63,20 @@ class ArucoDetector:
                 
         # Convert from meters to centimeters
         # consistently 6mm too much?
-        x_cm, y_cm, z_cm = x * 100, y * 100, z * 100 
+        # x_cm, y_cm, z_cm = x * 100, y * 100, z * 100 
         
-        return x_cm, y_cm, z_cm 
+        return x, y, z 
     
     # Display the 3D coordinates next to the marker
     # display x, y, z in different lines
     def display(self, color_image, x_pixel, y_pixel, marker_id):
         # Get the position data from the dictionary
-        x_cm, y_cm, z_cm = self.marker_positions[marker_id]
+        x, y, z = self.marker_positions[marker_id]
         
         coord_text = (f"ID {marker_id}:\n"
-                      f"X={x_cm:.2f}cm\n"
-                      f"Y={y_cm:.2f}cm\n"
-                      f"Z={z_cm:.2f}cm")
+                      f"X={x:.2f}m\n"
+                      f"Y={y:.2f}m\n"
+                      f"Z={z:.2f}m")
         for j, line in enumerate(coord_text.split('\n')):
             y_offset = y_pixel + 20 + (15 * j)
             cv2.putText(color_image, line, (x_pixel + 20, y_offset), 
@@ -100,11 +100,11 @@ class ArucoDetector:
                 x_pixel, y_pixel = int(center[0]), int(center[1])
 
                 # calulcate position in 3D space in cm
-                x_cm, y_cm, z_cm = self.calculate_cm(x_pixel, y_pixel, depth_frame)
+                x, y, z = self.calculate_cm(x_pixel, y_pixel, depth_frame)
                 
                 # Update the dictionary with the latest position data
                 marker_id = ids[i][0]
-                self.marker_positions[marker_id] = [x_cm, y_cm, z_cm]
+                self.marker_positions[marker_id] = [x, y, z]
 
                 self.display(color_image, x_pixel, y_pixel, marker_id)
                 
