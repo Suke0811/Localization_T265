@@ -4,7 +4,7 @@ import cv2
 import cv2.aruco as aruco
 
 class ArucoDetector:
-    def __init__(self):
+    def __init__(self, aruco_dict_type=aruco.DICT_5X5_250):
         self.pipeline = rs.pipeline()
         self.config = rs.config()
         self.config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
@@ -15,7 +15,7 @@ class ArucoDetector:
         self.align = rs.align(self.align_to)
         
         # Use 6x6_250 Dict aruco library
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        self.aruco_dict = aruco.Dictionary_get(aruco_dict_type)
         self.aruco_params = aruco.DetectorParameters_create()
         
         # Dictionary to hold marker positions
@@ -58,8 +58,10 @@ class ArucoDetector:
         point_3D = rs.rs2_deproject_pixel_to_point(self.intrinsics, [x_pixel, y_pixel], depth)      
         
         # Adjust y-coordinate so that up is positive y
+        # spec sheet gives that camera is -4.2mm from front glass
         x, y, z = point_3D
         y = -y  
+        z = z - 0.0042
                 
         # Convert from meters to centimeters
         # consistently 6mm too much?

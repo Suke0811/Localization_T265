@@ -63,7 +63,7 @@ def aruco_generator(ids: List[int],
 
 
 # Example usage:
-ids = [6]
-tag_types = [DICT_6X6] 
+ids = [0, 1, 2, 3]
+tag_types = [DICT_5X5] 
 # Generate ArUco markers
-aruco_generator(ids, tag_types, 200, "png", "DICT_6X6_250")
+aruco_generator(ids, tag_types, 200, "png", "DICT_5X5_250")
