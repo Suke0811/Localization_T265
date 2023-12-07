@@ -76,9 +76,9 @@ class ArucoDetector:
         x, y, z = self.marker_positions[marker_id]
         
         coord_text = (f"ID {marker_id}:\n"
-                      f"X={x:.2f}m\n"
-                      f"Y={y:.2f}m\n"
-                      f"Z={z:.2f}m")
+                      f"X={x:.4f}m\n"
+                      f"Y={y:.4f}m\n"
+                      f"Z={z:.4f}m")
         for j, line in enumerate(coord_text.split('\n')):
             y_offset = y_pixel + 20 + (15 * j)
             cv2.putText(color_image, line, (x_pixel + 20, y_offset), 
@@ -102,7 +102,7 @@ class ArucoDetector:
                 x_pixel, y_pixel = int(center[0]), int(center[1])
 
                 # calulcate position in 3D space in cm
-                x, y, z = self.calculate_cm(x_pixel, y_pixel, depth_frame)
+                x, y, z = self.calculate_m(x_pixel, y_pixel, depth_frame)
                 
                 # Update the dictionary with the latest position data
                 marker_id = ids[i][0]
