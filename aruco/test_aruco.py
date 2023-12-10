@@ -22,6 +22,7 @@ def aruco_test():
             # Display the image
             cv2.imshow('RealSense Color', color_image)
 
+        # buttons to test functions
         key = cv2.waitKey(1) & 0xFF
 
         # Check for 'c' key to run auto_calibration
@@ -38,7 +39,7 @@ def aruco_test():
 
     # Clean up resources properly
     aruco_detector.uninitialize()
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows() # redundant
 
 
 if __name__ == '__main__':

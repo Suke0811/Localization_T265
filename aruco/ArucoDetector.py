@@ -114,6 +114,7 @@ class ArucoDetector:
         print(f"Auto-calibration complete. Best exposure set to {best_exposure}.")
         cv2.destroyAllWindows()
     
+    # reset from manual exposure to built in auto-exposure
     def reset_exposure(self):
         # Get the color sensor from the connected device
         color_sensor = self.profile.get_device().first_color_sensor()
