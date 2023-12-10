@@ -2,7 +2,7 @@
 from ArucoDetector import ArucoDetector
 import cv2
 
-aruco = ArucoDetector(cv2.aruco.DICT_6X6_250)
+aruco = ArucoDetector(cv2.aruco.DICT_5X5_250)
 aruco.start_stream()
 
 
