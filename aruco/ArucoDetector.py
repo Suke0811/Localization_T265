@@ -8,8 +8,8 @@ class ArucoDetector:
     def __init__(self, aruco_dict_type=aruco.DICT_5X5_250):
         self.pipeline = rs.pipeline()
         self.config = rs.config()
-        self.config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 60)
-        self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 60)
+        self.config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 60)
+        self.config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 60)
         
         # Align the two cameras since there is physical offset
         self.align_to = rs.stream.color
@@ -26,6 +26,21 @@ class ArucoDetector:
         self.intrinsics = None
     
     def __del__(self):
+        # Destructor to safely close windows and stop the stream
+        print("Closing ArucoDetector and releasing resources")
+        try:
+            if self.pipeline:
+                self.pipeline.stop()
+        except Exception as e:
+            print(f"Error stopping pipeline: {e}")
+        finally:
+            cv2.destroyAllWindows()
+            # set back to auto exposure
+            color_sensor = self.profile.get_device().first_color_sensor()
+            color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+    
+    # same as desructor, can be manually called
+    def uninitialize(self):
         # Destructor to safely close windows and stop the stream
         print("Closing ArucoDetector and releasing resources")
         try:
@@ -58,7 +73,7 @@ class ArucoDetector:
             step (int): Step size to increment exposure.
             frames_to_check (int): Number of frames to check at each exposure level.
         """
-    def auto_calibration(self, min_exposure=50, max_exposure=1000, step=50, frames_to_check=5):
+    def auto_calibration(self, min_exposure=50, max_exposure=1600, step=50, frames_to_check=5):
         color_sensor = self.profile.get_device().first_color_sensor()
         color_sensor.set_option(rs.option.enable_auto_exposure, 0)
 
@@ -86,7 +101,7 @@ class ArucoDetector:
                     if ids is not None:
                         markers_detected += len(ids)
 
-                time.sleep(0.1)  # Give some time for the camera to adjust if needed
+                time.sleep(0.025)  # Give some time for the camera to adjust if needed
 
             print(f"Exposure: {exposure_value}, Markers Detected: {markers_detected}")
             if markers_detected > max_detected_markers:
@@ -98,6 +113,15 @@ class ArucoDetector:
         color_sensor.set_option(rs.option.exposure, best_exposure)
         print(f"Auto-calibration complete. Best exposure set to {best_exposure}.")
         cv2.destroyAllWindows()
+    
+    def reset_exposure(self):
+        # Get the color sensor from the connected device
+        color_sensor = self.profile.get_device().first_color_sensor()
+        
+        # Set the exposure mode back to automatic
+        color_sensor.set_option(rs.option.enable_auto_exposure, 1)
+        print("Exposure reset to automatic.")
+
         
     # non-blocking processing of frames (poll_for_frames)
     def process_frames(self):

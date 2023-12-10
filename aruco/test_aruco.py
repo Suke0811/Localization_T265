@@ -20,7 +20,17 @@ while True:
         # Display the image
         cv2.imshow('RealSense Color', color_image)
 
+    key = cv2.waitKey(1) & 0xFF
+
+    # Check for 'c' key to run auto_calibration
+    if key == ord('c'):
+        aruco_detector.auto_calibration()
+
+    # Check for 'r' key to reset exposure
+    elif key == ord('r'):
+        aruco_detector.reset_exposure()
+
     # Break the loop when 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    elif key == ord('q'):
         break
 
