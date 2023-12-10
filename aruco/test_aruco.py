@@ -11,7 +11,7 @@ def aruco_test():
     aruco_detector.start_stream()
 
     # Set the exposure of the camera
-    # aruco_detector.auto_calibration()  # Make sure this value is within the supported range
+    aruco_detector.auto_calibration()  # Make sure this value is within the supported range
 
     while True:
         # Process frames from the camera
