@@ -73,7 +73,7 @@ class ArucoDetector:
             step (int): Step size to increment exposure.
             frames_to_check (int): Number of frames to check at each exposure level.
         """
-    def auto_calibration(self, min_exposure=50, max_exposure=1600, step=50, frames_to_check=5):
+    def auto_calibration(self, min_exposure=50, max_exposure=2000, step=50, frames_to_check=5):
         color_sensor = self.profile.get_device().first_color_sensor()
         color_sensor.set_option(rs.option.enable_auto_exposure, 0)
 
@@ -101,7 +101,7 @@ class ArucoDetector:
                     if ids is not None:
                         markers_detected += len(ids)
 
-                time.sleep(0.025)  # Give some time for the camera to adjust if needed
+                time.sleep(0.02)  # Give some time for the camera to adjust if needed
 
             print(f"Exposure: {exposure_value}, Markers Detected: {markers_detected}")
             if markers_detected > max_detected_markers:
