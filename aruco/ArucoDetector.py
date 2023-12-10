@@ -23,6 +23,12 @@ class ArucoDetector:
         
         # Variable to hold camera intrinsics
         self.intrinsics = None
+    
+    def __del__(self):
+        # Destructor to close windows and stop the stream
+        print("Closing ArucoDetector and releasing resources")
+        self.stop_stream()
+        cv2.destroyAllWindows()
 
     def start_stream(self):
         # Start the pipeline
@@ -34,19 +40,28 @@ class ArucoDetector:
         # Stop the pipeline
         self.pipeline.stop()
         
+    # non-blocking processing of frames (poll_for_frames)
     def process_frames(self):
-        frames = self.pipeline.wait_for_frames()
-        aligned_frames = self.align.process(frames)
-        aligned_depth_frame = aligned_frames.get_depth_frame()
-        color_frame = aligned_frames.get_color_frame()
+        # Attempt to retrieve the next set of frames
+        frames = self.pipeline.poll_for_frames()
 
-        if not aligned_depth_frame or not color_frame:
+        # Check if frames are available
+        if frames:
+            aligned_frames = self.align.process(frames)
+            aligned_depth_frame = aligned_frames.get_depth_frame()
+            color_frame = aligned_frames.get_color_frame()
+
+            if not aligned_depth_frame or not color_frame:
+                return None, None
+
+            # Convert color image to numpy array
+            color_image = np.asanyarray(color_frame.get_data())
+
+            return aligned_depth_frame, color_image
+        else:
+            # No new frames available
             return None, None
 
-        # Convert color image to numpy array
-        color_image = np.asanyarray(color_frame.get_data())
-
-        return aligned_depth_frame, color_image
     
 # ### helper functions for update_marker_positions ### #
     #  calculates x, y, z position
