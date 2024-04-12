@@ -66,7 +66,9 @@ class Tracking:
         """
         if self.camera_on:
             raise RuntimeError('Cannot add custom frames after the camera is started')
-        self.frames[name] = FrameHandler(name).set_frame_transformation(trans, rot, rot_format, degrees, T)
+        fh = FrameHandler(name)
+        fh.set_frame_transformation(trans, rot, rot_format, degrees, T)
+        self.frames[name] = fh
 
     def start_tracking(self):
         """
@@ -153,8 +155,8 @@ class Tracking:
         Args:
             frame (str): The frame of the translation. If frame is None, return the translation of the default frame.
             trans (bool): If True, returns the translation.
-            rotation (str): Rotation format. 'quat', or Euler 'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx', 'ZYX', 'ZXY',
-                            'YXZ', 'YZX', 'XZY', 'XYZ'.
+            rotation (str): Rotation format. 'quat', or Euler extrinsic: 'xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx', and
+                intrinsic moving frame: 'ZYX', 'ZXY', 'YXZ', 'YZX', 'XZY', 'XYZ'.
             degrees (bool): If True, the Euler angles are returned in degrees. ignored if rotation is 'quat'.
 
         Returns:
@@ -163,7 +165,7 @@ class Tracking:
         """
         ret = None
         if frame is None:
-            ret = self._get_translation(trans, rotation)
+            ret = self._get_translation(trans, rotation, degrees)
         else:
             T = self.get_matrix(frame)
             if T is not None:
@@ -235,7 +237,7 @@ class Tracking:
 
             return all_vel
 
-    def get_acceleration(self, frame=None):
+    def get_acceleration(self, frame=None) -> np.ndarray:
         """
         Get the acceleration of the camera.
 
@@ -250,7 +252,7 @@ class Tracking:
                 raise NotImplementedError('Acceleration conversion is not implemented yet')
             return np.append(acc, ang_acc)
 
-    def get_matrix(self, frame=None):
+    def get_matrix(self, frame=None) -> np.ndarray:
         """
         Get the transformation matrix of the camera in a specific frame.
 
@@ -285,7 +287,7 @@ class Tracking:
             #     T = ros0_T_rosk
             return T
 
-    def _quat2other(self, quat, order: str = 'xyzw', format='matrix', degrees=False):
+    def _quat2other(self, quat, order: str = 'xyzw', format='matrix', degrees=False) -> np.ndarray:
         """
         Convert quaternion to other format.
 
@@ -320,7 +322,7 @@ class Tracking:
         """
         return np.array([vector.x, vector.y, vector.z])
 
-    def _quat2np(self, quat, order: str = 'xyzw'):
+    def _quat2np(self, quat, order: str = 'xyzw') -> np.ndarray:
         """
         Convert rs.quaternion to np.array.
 
@@ -336,7 +338,7 @@ class Tracking:
         else:
             return np.array([quat.x, quat.y, quat.z, quat.w])
 
-    def _set_defualt_frames(self):
+    def _set_defualt_frames(self) -> None:
         """
         Set the default frames.
         """
@@ -345,7 +347,7 @@ class Tracking:
             f.set_frame_transformation(**frame)
             self.frames[name] = f
 
-    def _init_frames(self):
+    def _init_frames(self) -> None:
         """
         Initialize the frames.
         """
@@ -353,7 +355,7 @@ class Tracking:
         for name, frame in self.frames.items():
             frame.set_init_frame(T=T)
 
-    def _convert_frame(self, name, T, T_mat=True, angular=None, linear=None):
+    def _convert_frame(self, name, T, T_mat=True, angular=None, linear=None) -> FrameHandler:
         """
         Convert the frame to the given frame.
 
@@ -370,7 +372,7 @@ class Tracking:
         return frame.convert(current_camera_frame=T, T_mat=T_mat, angular=angular, linear=linear)
 
     # Status functions
-    def is_camera_on(self):
+    def is_camera_on(self) -> bool:
         """
         Check if the camera is on.
 
@@ -379,7 +381,7 @@ class Tracking:
         """
         return self.camera_on
 
-    def get_camera_sn(self):
+    def get_camera_sn(self) -> str:
         """
         Get the camera serial number.
 
