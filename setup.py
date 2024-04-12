@@ -15,8 +15,10 @@ with open('requirements.txt') as f:
 
 setup(
     name='t265',
-    version='0.1.10',
+    version='0.1.10.1',
     description='t265 Tracking camera API wrapper',
+    long_description=read('ReadMe.md'),
+    long_description_content_type='text/markdown',
     author='Yusuke Tanaka',
     license='LGPLv3',
     project_urls={'GitHub':'https://github.com/Suke0811/Localization_T265'},
