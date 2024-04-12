@@ -15,7 +15,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='t265',
-    version='0.1.8',
+    version='0.1.10',
     description='t265 Tracking camera API wrapper',
     author='Yusuke Tanaka',
     license='LGPLv3',

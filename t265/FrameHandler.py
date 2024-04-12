@@ -13,7 +13,6 @@ class FrameHandler:
         self.frame_name = frame_name
         self.T_init = np.eye(4)
         self.T_trans = np.eye(4)
-        pass
 
     def set_frame_transformation(self, trans=None, rot=None, rot_format='quat', degrees=False, T=None):
         """
