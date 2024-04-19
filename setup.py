@@ -15,7 +15,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='t265',
-    version='0.1.10.1',
+    version='0.1.11',
     description='t265 Tracking camera API wrapper',
     long_description=read('ReadMe.md'),
     long_description_content_type='text/markdown',
