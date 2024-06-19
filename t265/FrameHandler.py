@@ -110,15 +110,16 @@ class FrameHandler:
 
         return ret
 
-    def convert(self, current_camera_frame, T_mat=True, angular=None, linear=None):
+    def convert(self, current_camera_frame, T_mat=True, angular=None, linear=None, local_frame=False):
         """
         Apply the frame transformation to the given frame, resulting in a transformed frame and, optionally, angular and linear velocities.
 
         Args:
             current_camera_frame (np.array): 4x4 transformation matrix of the current camera frame.
             T_mat (bool, optional): If True, the resulting transformed frame matrix is included in the return tuple. Defaults to True.
-            angular (bool, optional): If True, the transformed angular velocity is included in the return tuple. Defaults to True.
-            linear (bool, optional): If True, the transformed linear velocity is included in the return tuple. Defaults to True.
+            angular (np, optional): If not None, the transformed angular velocity is included in the return tuple. Defaults to True.
+            linear (np, optional): If not None, the transformed linear velocity is included in the return tuple. Defaults to True.
+            local_frame (bool, optional): If True, the velocity is w.r.t. the current frame
 
         Returns:
             tuple: A tuple containing the transformed frame, angular velocity, and linear velocity as requested.
@@ -126,7 +127,10 @@ class FrameHandler:
         """
         T = self.transform(current_camera_frame, return_all_frames=False)
         if angular is not None and linear is not None:
-            vel = self.transform_velocity(current_camera_frame, angular, linear)
+            if local_frame:
+                vel = self.transform_velocity_to_current_pose(current_camera_frame, angular, linear)
+            else:
+                vel = self.transform_velocity(current_camera_frame, angular, linear)
 
         if T_mat and angular is not None and linear is not None:
             return T, vel
@@ -211,3 +215,18 @@ class FrameHandler:
 
         # Return the transformed velocity vector, combining the transformed angular and linear velocities
         return np.append(ros0_v_ros, ros0_w_ros)
+
+    def transform_velocity_to_current_pose(self, current_camera_frame, angular, linear):
+        # Compute the transformation matrix from initial to current pose frame
+        T = self.transform(current_camera_frame, return_all_frames=False)
+
+        # Extract the rotation matrix and translation vector
+        current_R = T[:3, :3]
+        current_t = T[:3, 3]
+
+        # Transform the angular velocity
+        transformed_angular = current_R @ angular
+        # Transform the linear velocity
+        transformed_linear = current_R @ linear + np.cross(transformed_angular, current_t)
+
+        return np.append(transformed_angular, transformed_linear)
