@@ -229,3 +229,26 @@ class FrameHandler:
         transformed_linear = current_R @ linear + np.cross(transformed_angular, current_t)
 
         return np.append(transformed_angular, transformed_linear)
+
+    def transform_acceleration(self, current_camera_frame, angular_acc, linear_acc):
+        """
+        Transforms acceleration components from the current camera frame to the target frame.
+
+        Args:
+            current_camera_frame (np.array): 4x4 transformation matrix of the current camera frame.
+            angular_acc (np.array): Angular acceleration vector [awx, awy, awz] in the initial frame.
+            linear_acc (np.array): Linear acceleration vector [ax, ay, az] in the initial frame.
+
+        Returns:
+            np.array: The transformed acceleration vector [ax', ay', az', awx', awy', awz'] in the target frame.
+        """
+        T, ros0_T_rosk, ros0_T_ck, c0_T_ck, c0_T_E, E_T_ck, ros_T_c, c_T_ros = self.transform(current_camera_frame,
+                                                                                              return_all_frames=True)
+        c_p_ros = self.T_trans[0:3, 3].flatten()
+        ros0_R_rosk = ros0_T_rosk[0:3, 0:3]
+        ck_R_E = E_T_ck[0:3, 0:3].transpose()
+        ck_alpha_ck = ck_R_E @ angular_acc
+        ck_a_ck = ck_R_E @ linear_acc
+        ros0_alpha_ros = (ros0_R_rosk @ ck_alpha_ck).reshape(3, )
+        ros0_a_ros = (ros0_R_rosk @ ck_a_ck).reshape(3, )
+        return np.append(ros0_a_ros, ros0_alpha_ros)

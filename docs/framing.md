@@ -16,3 +16,89 @@ $\text{transform}(\text{current\_camera\_frame}, \text{return\_all\_frames}=\tex
 ## APIs and implementation :
 
 [APIs](frame_handler.md#t265.FrameHandler.FrameHandler.transform)
+
+------
+## Acceleration frame conversion
+
+
+Given:
+
+- \( \mathbf{T}_{current} \): The current transformation matrix of the camera frame, a \(4 \times 4\) matrix.
+- \( \mathbf{a} \): Linear acceleration in the initial frame, represented as a \(3 \times 1\) vector.
+- \( \boldsymbol{\alpha} \): Angular acceleration in the initial frame, represented as a \(3 \times 1\) vector.
+- \( \mathbf{T}_{trans} \): The transformation matrix to the desired frame, a \(4 \times 4\) matrix.
+
+We want to find the transformed linear acceleration \( \mathbf{a}' \) and angular acceleration \( \boldsymbol{\alpha}' \) in the desired frame.
+
+1. **Extract the rotation matrices and translation vectors:**
+
+   - \( \mathbf{T}_{current} \):
+
+     \[
+     \mathbf{T}_{current} = \begin{bmatrix}
+     \mathbf{R}_{current} & \mathbf{t}_{current} \\
+     \mathbf{0}_{1 \times 3} & 1
+     \end{bmatrix}
+     \]
+
+     where \( \mathbf{R}_{current} \) is the \(3 \times 3\) rotation matrix and \( \mathbf{t}_{current} \) is the \(3 \times 1\) translation vector.
+
+   - \( \mathbf{T}_{trans} \):
+
+     \[
+     \mathbf{T}_{trans} = \begin{bmatrix}
+     \mathbf{R}_{trans} & \mathbf{t}_{trans} \\
+     \mathbf{0}_{1 \times 3} & 1
+     \end{bmatrix}
+     \]
+
+     where \( \mathbf{R}_{trans} \) is the \(3 \times 3\) rotation matrix and \( \mathbf{t}_{trans} \) is the \(3 \times 1\) translation vector.
+
+2. **Compute the inverse transformation matrix of the initial frame \( \mathbf{T}_{init}^{-1} \):**
+
+   \[
+   \mathbf{T}_{init}^{-1} = \begin{bmatrix}
+   \mathbf{R}_{init}^{T} & -\mathbf{R}_{init}^{T} \mathbf{t}_{init} \\
+   \mathbf{0}_{1 \times 3} & 1
+   \end{bmatrix}
+   \]
+
+   Here, \( \mathbf{R}_{init}^{T} \) is the transpose of the initial rotation matrix, and \( -\mathbf{R}_{init}^{T} \mathbf{t}_{init} \) is the transformed translation vector.
+
+3. **Transform the linear and angular accelerations:**
+
+   \[
+   \mathbf{a}_{ck} = \mathbf{R}_{current}^{T} \mathbf{a}
+   \]
+
+   \[
+   \boldsymbol{\alpha}_{ck} = \mathbf{R}_{current}^{T} \boldsymbol{\alpha}
+   \]
+
+4. **Compute the final rotation matrix \( \mathbf{R}_{final} \):**
+
+   \[
+   \mathbf{R}_{final} = \mathbf{R}_{trans} \mathbf{R}_{current}
+   \]
+
+5. **Transform the linear acceleration in the desired frame:**
+
+   \[
+   \mathbf{a}' = \mathbf{R}_{final} \mathbf{a}_{ck}
+   \]
+
+6. **Transform the angular acceleration in the desired frame:**
+
+   \[
+   \boldsymbol{\alpha}' = \mathbf{R}_{final} \boldsymbol{\alpha}_{ck}
+   \]
+
+Thus, the transformed linear and angular accelerations in the desired frame can be represented as:
+
+\[
+\mathbf{a}' = \mathbf{R}_{trans} \mathbf{R}_{current}^{T} \mathbf{a}
+\]
+
+\[
+\boldsymbol{\alpha}' = \mathbf{R}_{trans} \mathbf{R}_{current}^{T} \boldsymbol{\alpha}
+\]

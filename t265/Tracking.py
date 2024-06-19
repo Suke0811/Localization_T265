@@ -8,12 +8,9 @@ DEFAULT_CONNECTION_RETRY = 5
 DEFAULT_RETRY_TIME = 500
 DEFAULT_TIMEOUT = 100
 
-DEFAULT_FRAMES = \
-    {'ros':
-         dict(trans=None, rot=[0, 90, 90], rot_format='xyz', degrees=True, T=None),
-    }
-
-
+DEFAULT_FRAMES = {
+    'ros': dict(trans=None, rot=[0, 90, 90], rot_format='xyz', degrees=True, T=None),
+}
 
 class Tracking:
     def __init__(self, camera_sn=None, connection_retry=DEFAULT_CONNECTION_RETRY, retry_time=DEFAULT_RETRY_TIME,
@@ -253,7 +250,9 @@ class Tracking:
             ang_acc = self._vector2np(self.pose.get_pose_data().angular_acceleration)
 
             if frame is not None:
-                raise NotImplementedError('Acceleration conversion is not implemented yet')
+                T = self.get_matrix()
+                acc_transformed = self._convert_frame_acc(frame, T, linear_acc=acc, angular_acc=ang_acc)
+                return acc_transformed
             return np.append(acc, ang_acc)
 
     def get_matrix(self, frame=None) -> np.ndarray:
@@ -276,19 +275,6 @@ class Tracking:
 
             if frame is not None:
                 T = self._convert_frame(frame, T, T_mat=True, angular=None, linear=None)
-
-            # if frame == 'ros':
-            #     rot = R.from_euler('xyz', [0, 90, 90], degrees=True).as_matrix()
-            #     c_T_ros = np.eye(4)
-            #     c_T_ros[0:3, 0:3] = rot
-            #
-            #     E_T_ck = T
-            #     c0_T_E = self.init_T.transpose()
-            #     c0_T_ck = c0_T_E @ E_T_ck
-            #     ros_T_c = c_T_ros.transpose()
-            #     ros0_T_ck = ros_T_c @ c0_T_ck
-            #     ros0_T_rosk = ros0_T_ck @ c_T_ros
-            #     T = ros0_T_rosk
             return T
 
     def _quat2other(self, quat, order: str = 'xyzw', format='matrix', degrees=False) -> np.ndarray:
@@ -375,7 +361,12 @@ class Tracking:
             raise ValueError(f'Frame {frame} does not exist')
         return frame.convert(current_camera_frame=T, T_mat=T_mat, angular=angular, linear=linear, local_frame=local_frame)
 
-    # Status functions
+    def _convert_frame_acc(self, name, T, angular_acc, linear_acc) -> FrameHandler:
+        frame = self.frames.get(name)
+        if frame is None:
+            raise ValueError(f'Frame {frame} does not exist')
+        return frame.transform_acceleration(current_camera_frame=T, angular_acc=angular_acc, linear_acc=linear_acc)
+
     def is_camera_on(self) -> bool:
         """
         Check if the camera is on.
