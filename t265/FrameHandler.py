@@ -109,15 +109,16 @@ class FrameHandler:
 
         return ret
 
-    def convert(self, current_camera_frame, T_mat=True, angular=None, linear=None):
+    def convert(self, current_camera_frame, T_mat=True, angular=None, linear=None, local_frame=False):
         """
         Apply the frame transformation to the given frame, resulting in a transformed frame and, optionally, angular and linear velocities.
 
         Args:
             current_camera_frame (np.array): 4x4 transformation matrix of the current camera frame.
             T_mat (bool, optional): If True, the resulting transformed frame matrix is included in the return tuple. Defaults to True.
-            angular (bool, optional): If True, the transformed angular velocity is included in the return tuple. Defaults to True.
-            linear (bool, optional): If True, the transformed linear velocity is included in the return tuple. Defaults to True.
+            angular (np, optional): If not None, the transformed angular velocity is included in the return tuple. Defaults to True.
+            linear (np, optional): If not None, the transformed linear velocity is included in the return tuple. Defaults to True.
+            local_frame (bool, optional): If True, the velocity is w.r.t. the current frame
 
         Returns:
             tuple: A tuple containing the transformed frame, angular velocity, and linear velocity as requested.
@@ -125,7 +126,10 @@ class FrameHandler:
         """
         T = self.transform(current_camera_frame, return_all_frames=False)
         if angular is not None and linear is not None:
-            vel = self.transform_velocity(current_camera_frame, angular, linear)
+            if local_frame:
+                vel = self.transform_velocity_to_current_pose(current_camera_frame, angular, linear)
+            else:
+                vel = self.transform_velocity(current_camera_frame, angular, linear)
 
         if T_mat and angular is not None and linear is not None:
             return T, vel
@@ -210,3 +214,41 @@ class FrameHandler:
 
         # Return the transformed velocity vector, combining the transformed angular and linear velocities
         return np.append(ros0_v_ros, ros0_w_ros)
+
+    def transform_velocity_to_current_pose(self, current_camera_frame, angular, linear):
+        # Compute the transformation matrix from initial to current pose frame
+        T = self.transform(current_camera_frame, return_all_frames=False)
+
+        # Extract the rotation matrix and translation vector
+        current_R = T[:3, :3]
+        current_t = T[:3, 3]
+
+        # Transform the angular velocity
+        transformed_angular = current_R @ angular
+        # Transform the linear velocity
+        transformed_linear = current_R @ linear + np.cross(transformed_angular, current_t)
+
+        return np.append(transformed_angular, transformed_linear)
+
+    def transform_acceleration(self, current_camera_frame, angular_acc, linear_acc):
+        """
+        Transforms acceleration components from the current camera frame to the target frame.
+
+        Args:
+            current_camera_frame (np.array): 4x4 transformation matrix of the current camera frame.
+            angular_acc (np.array): Angular acceleration vector [awx, awy, awz] in the initial frame.
+            linear_acc (np.array): Linear acceleration vector [ax, ay, az] in the initial frame.
+
+        Returns:
+            np.array: The transformed acceleration vector [ax', ay', az', awx', awy', awz'] in the target frame.
+        """
+        T, ros0_T_rosk, ros0_T_ck, c0_T_ck, c0_T_E, E_T_ck, ros_T_c, c_T_ros = self.transform(current_camera_frame,
+                                                                                              return_all_frames=True)
+        c_p_ros = self.T_trans[0:3, 3].flatten()
+        ros0_R_rosk = ros0_T_rosk[0:3, 0:3]
+        ck_R_E = E_T_ck[0:3, 0:3].transpose()
+        ck_alpha_ck = ck_R_E @ angular_acc
+        ck_a_ck = ck_R_E @ linear_acc
+        ros0_alpha_ros = (ros0_R_rosk @ ck_alpha_ck).reshape(3, )
+        ros0_a_ros = (ros0_R_rosk @ ck_a_ck).reshape(3, )
+        return np.append(ros0_a_ros, ros0_alpha_ros)

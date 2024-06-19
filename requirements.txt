@@ -1,2 +1,4 @@
+pyrealsense2<2.54.1
 pyrealsense2<2.54
 numpy
+scipy
